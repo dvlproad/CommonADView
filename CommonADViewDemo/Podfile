@@ -1,0 +1,10 @@
+platform :ios, '7.0'
+#use_frameworks!
+
+target 'CommonADViewDemo' do
+  pod 'SDWebImage', '~> 3.7.2'
+end
+
+target 'CommonADViewDemoTests' do
+
+end
