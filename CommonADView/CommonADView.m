@@ -7,7 +7,7 @@
 //
 
 #import "CommonADView.h"
-#import <UIImageView+WebCache.h>
+#import <SDWebImage/UIImageView+WebCache.h>
 #import "UIView+GestureRecognizer.h"
 
 @implementation CommonADView
@@ -235,7 +235,7 @@
     CGFloat svWidth = self.frame.size.width;
     CGFloat svHeight = self.frame.size.height;
     
-    int page = pageControl.currentPage;
+    NSInteger page = pageControl.currentPage;
     
     switch (self.m_direction) {
         case eAdViewDirectionDown:{
@@ -257,7 +257,7 @@
 
 #pragma mark - 定时器 绑定的方法
 - (void)runTimePage{
-    int page = pageControl.currentPage;
+    NSInteger page = pageControl.currentPage;
     page++;
     page = page == adImageNameArray.count ? 0 : page ;
     pageControl.currentPage = page;

@@ -18,7 +18,7 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-    NSArray *images = @[@"http://assets.sbnation.com/assets/2512203/dogflops.gif",
+    NSArray *images = @[@"http://img.newyx.net/news_img/201306/20/1371714170_1812223777.gif",
                         @"http://f10.topitme.com/l129/101294861836acc143.jpg",
                         @"http://i10.topitme.com/l113/1011344257aa5d1add.jpg",
                         @"http://f10.topitme.com/l056/10056468227b430444.jpg",

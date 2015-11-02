@@ -1,5 +1,6 @@
 # CommonADView
 简单易用广告控件
+图片缓存使用pod 'SDWebImage', '~> 3.7.2'
 
 ##Example
 ```
