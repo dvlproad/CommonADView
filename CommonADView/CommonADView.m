@@ -7,19 +7,24 @@
 //
 
 #import "CommonADView.h"
+#import <Masonry/Masonry.h>
 #import <SDWebImage/UIImageView+WebCache.h>
 #import "UIView+GestureRecognizer.h"
 
+@interface CommonADView ()
+
+@property (nonatomic, strong) UIView *containerView;
+
+@end
+
+
 @implementation CommonADView
-@synthesize delegate;
-@synthesize sv;
-@synthesize pageControl;
 
 - (id)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
     if (self) {
-        [self initializeView];
+        [self commonInit];
     }
     return self;
 }
@@ -27,43 +32,56 @@
 - (id)initWithCoder:(NSCoder *)aDecoder{    //使用xib的时候，调用的控件初始化方法
     self = [super initWithCoder:aDecoder];
     if (self) {
-        [self initializeView];
+        [self commonInit];
     }
     return self;
     
 }
 
 
-- (void)initializeView{
-    [self addScrollView];
+- (void)commonInit {
+    [self setupScrollView];
     [self addPageControl];
 }
 
-
-- (void)addScrollView{
-    CGRect svFrame = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);
-    sv = [[UIScrollView alloc]initWithFrame:svFrame];
-    sv.delegate = self;   //设置委托
+- (void)setupScrollView {
+    self.scrollView = [[UIScrollView alloc] init];
+    self.scrollView.backgroundColor = [UIColor redColor];
+    [self addSubview:self.scrollView];
+    [self.scrollView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.right.top.bottom.mas_equalTo(self);
+    }];
     
-    sv.bounces = YES;
-    sv.pagingEnabled = YES;
-    sv.userInteractionEnabled = YES;
-    sv.showsHorizontalScrollIndicator = NO;
-    sv.showsVerticalScrollIndicator = NO;
+    self.containerView = [[UIView alloc] init];
+    self.containerView.backgroundColor = [UIColor greenColor];
+    [self.scrollView addSubview:self.containerView];
+    [self.containerView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.right.mas_equalTo(self.scrollView);
+        make.top.bottom.mas_equalTo(self.scrollView);
+        make.width.mas_equalTo(self.scrollView.mas_width).mas_offset(0);
+        make.height.mas_equalTo(self.scrollView.mas_height).mas_offset(1);
+    }];
     
-    [self addSubview:sv];
+    
+    self.scrollView.delegate = self;   //设置委托
+    self.scrollView.bounces = YES;
+    self.scrollView.pagingEnabled = YES;
+    self.scrollView.userInteractionEnabled = YES;
+    self.scrollView.showsHorizontalScrollIndicator = NO;
+    self.scrollView.showsVerticalScrollIndicator = NO;
 }
 
+
 - (void)addPageControl{
-    pageControl = [[UIPageControl alloc]initWithFrame:CGRectZero];
+    self.pageControl = [[UIPageControl alloc]initWithFrame:CGRectZero];
     //在不设置pageControl的width时，其会通过之后的numberOfPages自动设置合适的宽。所以有此技巧的话，我们可以省去计算它的宽
     
-    [pageControl setCurrentPageIndicatorTintColor:[UIColor redColor]];
-    [pageControl setPageIndicatorTintColor:[UIColor blackColor]];
-    //pageControl.numberOfPages = 3;
-    pageControl.currentPage = 0;
-    [pageControl addTarget:self action:@selector(turnPage) forControlEvents:UIControlEventValueChanged];
-    [self addSubview:pageControl];
+    [self.pageControl setCurrentPageIndicatorTintColor:[UIColor redColor]];
+    [self.pageControl setPageIndicatorTintColor:[UIColor blackColor]];
+    //self.pageControl.numberOfPages = 3;
+    self.pageControl.currentPage = 0;
+    [self.pageControl addTarget:self action:@selector(turnPage) forControlEvents:UIControlEventValueChanged];
+    [self addSubview:self.pageControl];
 }
 
 
@@ -76,10 +94,10 @@
 #pragma mark - 注意:当使用xib的时候，如果再在xib上的scrollView上添加新xib控件，如Label，则会导致ScrollView无法移动，解决方法：将原本的ContentSize设置从viewDidLoad方法中调到viewDidAppear方法中。
 - (void)setViewWithImages:(NSArray *)m_images direction:(NSInteger)direction{
     if (m_images.count == 1) {
-        [self.sv setScrollEnabled:NO];
+        [self.scrollView setScrollEnabled:NO];
         [self.pageControl setAlpha:0];
     }else{
-        [self.sv setScrollEnabled:YES];
+        [self.scrollView setScrollEnabled:YES];
         [self.pageControl setAlpha:1];
     }
     adImageNameArray = m_images;
@@ -92,7 +110,7 @@
     [images addObject:adImageNameArray[0]];
     
     
-    pageControl.numberOfPages = adImageNameArray.count;
+    self.pageControl.numberOfPages = adImageNameArray.count;
     
     
     CGSize svContentSize = CGSizeZero;
@@ -110,8 +128,7 @@
             pageControlCenter = CGPointMake(self.frame.size.width/2, self.frame.size.height - 20);
             
             for (int i = 0; i < images.count; i++) {
-                CGRect imageVFrame = CGRectMake(i * self.frame.size.width, 0, self.frame.size.width, self.frame.size.height);
-                UIImageView *imageV = [[UIImageView alloc]initWithFrame:imageVFrame];
+                UIImageView *imageV = [[UIImageView alloc] initWithFrame:CGRectZero];
                 imageV.tag = i;
                 [self addImageView:imageV withImagePath:images[i]];
             }
@@ -126,24 +143,26 @@
             pageControlCenter = CGPointMake(self.frame.size.width - 10, self.frame.size.height/2);
             
             for (int i = 0; i < images.count; i++) {
-                CGRect imageVFrame = CGRectMake(0, i * self.frame.size.height, self.frame.size.width, self.frame.size.height);
-                UIImageView *imageV = [[UIImageView alloc]initWithFrame:imageVFrame];
+                UIImageView *imageV = [[UIImageView alloc]initWithFrame:CGRectZero];
                 imageV.tag = i;
                 [self addImageView:imageV withImagePath:images[i]];
             }
             
-            pageControl.transform = CGAffineTransformRotate(pageControl.transform, M_PI/2);//竖直
+            self.pageControl.transform = CGAffineTransformRotate(self.pageControl.transform, M_PI/2);//竖直
             break;
         }
         default:
             break;
     }
     
+    [self.scrollView mas_updateConstraints:^(MASConstraintMaker *make) {
+        make.width.mas_equalTo(self.scrollView.mas_width).multipliedBy(images.count).mas_offset(1);
+        make.height.mas_equalTo(self.scrollView.mas_height).multipliedBy(1).mas_offset(0);
+    }];
     
-    [sv setContentSize:svContentSize];
-    [sv setContentOffset:svContentOffset];
-    [sv scrollRectToVisible:svRectToVisible animated:NO];
-    [pageControl setCenter:pageControlCenter];
+    [self.scrollView setContentOffset:svContentOffset];
+    [self.scrollView scrollRectToVisible:svRectToVisible animated:NO];
+    [self.pageControl setCenter:pageControlCenter];
 
 }
 
@@ -152,7 +171,10 @@
 
 - (void)addImageView:(UIImageView *)imageV withImagePath:(NSString *)imagePath{ //or imageUrl
     [imageV addTapGestureWithTarget:self mSEL:@selector(imageViewClick:)];
-    [sv addSubview:imageV];
+    [self.scrollView addSubview:imageV];
+    [imageV mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.mas_equalTo(self.scrollView).mas_equalTo(0);
+    }];
     
     if (self.delegate && [self.delegate respondsToSelector:@selector(commonAdView_setImageView:withImagePath:)]) {
         [self.delegate commonAdView_setImageView:imageV withImagePath:imagePath];
@@ -177,7 +199,7 @@
             CGFloat svWidth = self.frame.size.width;
             int page = floor( (scrollView.contentOffset.x - svWidth/(adImageNameArray.count+2)) /svWidth) + 1;
             page --;  //由于默认从第二张开始。所以如果算出来如果是第二张，其实是第一页，所以要减去一页
-            pageControl.currentPage = page;
+            self.pageControl.currentPage = page;
             
             break;
         }
@@ -185,7 +207,7 @@
             CGFloat svHeight = self.frame.size.height;
             int page = floor( (scrollView.contentOffset.y - svHeight/(adImageNameArray.count+2)) /svHeight) + 1;
             page --;  //由于默认从第二张开始。所以如果算出来如果是第二张，其实是第一页，所以要减去一页
-            pageControl.currentPage = page;
+            self.pageControl.currentPage = page;
             
             break;
         }
@@ -235,16 +257,16 @@
     CGFloat svWidth = self.frame.size.width;
     CGFloat svHeight = self.frame.size.height;
     
-    NSInteger page = pageControl.currentPage;
+    NSInteger page = self.pageControl.currentPage;
     
     switch (self.m_direction) {
         case eAdViewDirectionDown:{
-            [sv scrollRectToVisible:CGRectMake(svWidth * (page+1),0,svWidth,svHeight) animated:NO];
+            [self.scrollView scrollRectToVisible:CGRectMake(svWidth * (page+1),0,svWidth,svHeight) animated:NO];
             
             break;
         }
         case eAdViewDirectionRight:{
-            [sv scrollRectToVisible:CGRectMake(0,svHeight * (page+1),svWidth,svHeight) animated:NO];
+            [self.scrollView scrollRectToVisible:CGRectMake(0,svHeight * (page+1),svWidth,svHeight) animated:NO];
             
             break;
         }
@@ -257,13 +279,54 @@
 
 #pragma mark - 定时器 绑定的方法
 - (void)runTimePage{
-    NSInteger page = pageControl.currentPage;
+    NSInteger page = self.pageControl.currentPage;
     page++;
     page = page == adImageNameArray.count ? 0 : page ;
-    pageControl.currentPage = page;
+    self.pageControl.currentPage = page;
     [self turnPage];
 }
 
+#pragma mark - addSubView
+- (void)cj_makeView:(UIView *)superView addSubView:(UIView *)subView withEdgeInsets:(UIEdgeInsets)edgeInsets {
+    [superView addSubview:subView];
+    subView.translatesAutoresizingMaskIntoConstraints = NO;
+    
+    [superView addConstraint:
+     [NSLayoutConstraint constraintWithItem:subView
+                                  attribute:NSLayoutAttributeLeft   //left
+                                  relatedBy:NSLayoutRelationEqual
+                                     toItem:superView
+                                  attribute:NSLayoutAttributeLeft
+                                 multiplier:1
+                                   constant:edgeInsets.left]];
+    
+    [superView addConstraint:
+     [NSLayoutConstraint constraintWithItem:subView
+                                  attribute:NSLayoutAttributeRight  //right
+                                  relatedBy:NSLayoutRelationEqual
+                                     toItem:superView
+                                  attribute:NSLayoutAttributeRight
+                                 multiplier:1
+                                   constant:edgeInsets.right]];
+    
+    [superView addConstraint:
+     [NSLayoutConstraint constraintWithItem:subView
+                                  attribute:NSLayoutAttributeTop    //top
+                                  relatedBy:NSLayoutRelationEqual
+                                     toItem:superView
+                                  attribute:NSLayoutAttributeTop
+                                 multiplier:1
+                                   constant:edgeInsets.top]];
+    
+    [superView addConstraint:
+     [NSLayoutConstraint constraintWithItem:subView
+                                  attribute:NSLayoutAttributeBottom //bottom
+                                  relatedBy:NSLayoutRelationEqual
+                                     toItem:superView
+                                  attribute:NSLayoutAttributeBottom
+                                 multiplier:1
+                                   constant:edgeInsets.bottom]];
+}
 
 
 /*

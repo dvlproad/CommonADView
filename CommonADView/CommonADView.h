@@ -29,14 +29,11 @@ typedef enum eAdViewDirection{
 
 
 @interface CommonADView : UIView<UIScrollViewDelegate>{
-    UIScrollView *sv;
-    UIPageControl *pageControl;
-    
     NSArray *adImageNameArray;
 }
-@property(nonatomic, strong) id <CommonADViewDelegate>delegate;
-@property(nonatomic, strong) UIScrollView *sv;
-@property(nonatomic, strong) UIPageControl *pageControl;
+@property (nonatomic, strong) id <CommonADViewDelegate>delegate;
+@property (nonatomic, strong) UIScrollView *scrollView;
+@property (nonatomic, strong) UIPageControl *pageControl;
 
 @property(nonatomic) NSInteger m_direction;
 

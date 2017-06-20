@@ -7,14 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "CommonADView.h"
-#import <UIImageView+WebCache.h>
 
-@interface ViewController : UIViewController<CommonADViewDelegate>{
-    
-}
-@property(nonatomic, strong) IBOutlet CommonADView *commonADView;
-
+@interface ViewController : UIViewController
 
 @end
 
