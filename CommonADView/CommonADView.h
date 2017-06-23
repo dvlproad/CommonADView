@@ -2,16 +2,16 @@
 //  CommonADView.h
 //  CommonADViewDemo
 //
-//  Created by lichq on 7/22/15.
-//  Copyright (c) 2015 ciyouzen. All rights reserved.
+//  Created by ciyouzen on 7/22/15.
+//  Copyright (c) 2015 dvlproad. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
 
-typedef enum eAdViewDirection{
-    eAdViewDirectionDown = 0,
-    eAdViewDirectionRight
-}AdViewDirection;
+typedef NS_ENUM(NSUInteger, ADViewDirection) {
+    ADViewDirectionHorizontal,  /**< 水平滚动 */
+    ADViewDirectionVertical,    /**< 竖直滚动 */
+};
 
 
 
@@ -29,17 +29,16 @@ typedef enum eAdViewDirection{
 
 
 @interface CommonADView : UIView<UIScrollViewDelegate>{
-    NSArray *adImageNameArray;
+    
 }
 @property (nonatomic, strong) id <CommonADViewDelegate>delegate;
 @property (nonatomic, strong) UIScrollView *scrollView;
-@property (nonatomic, strong) UIPageControl *pageControl;
+@property (nonatomic, assign, readonly) NSInteger currentIndex; /**< 当前是第几页 */
 
-@property(nonatomic) NSInteger m_direction;
-
-
-- (void)setViewWithImages:(NSArray *)m_images direction:(NSInteger)direction;
+- (void)setViewWithImages:(NSArray *)m_images direction:(ADViewDirection)direction;
 - (void)addTimerWithTimeInterval:(CGFloat)timeInterval;
+
+- (void)showPageControl;
 
 
 @end

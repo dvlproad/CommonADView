@@ -2,8 +2,8 @@
 //  ADViewController.h
 //  CommonADViewDemo
 //
-//  Created by lichaoqian on 17/6/20.
-//  Copyright © 2017年 ciyouzen. All rights reserved.
+//  Created by ciyouzen on 7/22/15.
+//  Copyright (c) 2015 dvlproad. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>

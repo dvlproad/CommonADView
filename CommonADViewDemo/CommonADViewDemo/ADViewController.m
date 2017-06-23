@@ -2,8 +2,8 @@
 //  ADViewController.m
 //  CommonADViewDemo
 //
-//  Created by lichaoqian on 17/6/20.
-//  Copyright © 2017年 ciyouzen. All rights reserved.
+//  Created by ciyouzen on 7/22/15.
+//  Copyright (c) 2015 dvlproad. All rights reserved.
 //
 
 #import "ADViewController.h"
@@ -13,6 +13,10 @@
 @end
 
 @implementation ADViewController
+
+//- (BOOL)automaticallyAdjustsScrollViewInsets {
+//    return NO;
+//}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -27,7 +31,7 @@
                         ];
     [self.commonADView setDelegate:self];
     [self.commonADView addTimerWithTimeInterval:2.0]; //option
-    [self.commonADView setViewWithImages:images direction:eAdViewDirectionDown];
+    [self.commonADView setViewWithImages:images direction:ADViewDirectionHorizontal];
 }
 
 - (void)commonAdView_setImageView:(UIImageView *)imageV withImagePath:(NSString *)imagePath{

@@ -2,8 +2,8 @@
 //  CommonADView.m
 //  CommonADViewDemo
 //
-//  Created by lichq on 7/22/15.
-//  Copyright (c) 2015 ciyouzen. All rights reserved.
+//  Created by ciyouzen on 7/22/15.
+//  Copyright (c) 2015 dvlproad. All rights reserved.
 //
 
 #import "CommonADView.h"
@@ -13,7 +13,10 @@
 
 @interface CommonADView ()
 
+@property (nonatomic, strong) NSArray *adImageNameArray;
 @property (nonatomic, strong) UIView *containerView;
+@property (nonatomic, assign) ADViewDirection direction;    /**< 滚动方向 */
+@property (nonatomic, strong) UIPageControl *pageControl;
 
 @end
 
@@ -41,10 +44,16 @@
 
 - (void)commonInit {
     [self setupScrollView];
-    [self addPageControl];
 }
 
 - (void)setupScrollView {
+    UILabel *label = [[UILabel alloc] init];
+    label.backgroundColor = [UIColor redColor];
+    [self addSubview:label];
+    [label mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.right.top.bottom.mas_equalTo(self);
+    }];
+    
     self.scrollView = [[UIScrollView alloc] init];
     self.scrollView.backgroundColor = [UIColor redColor];
     [self addSubview:self.scrollView];
@@ -58,8 +67,8 @@
     [self.containerView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.left.right.mas_equalTo(self.scrollView);
         make.top.bottom.mas_equalTo(self.scrollView);
-        make.width.mas_equalTo(self.scrollView.mas_width).mas_offset(0);
-        make.height.mas_equalTo(self.scrollView.mas_height).mas_offset(1);
+        make.width.mas_equalTo(self.scrollView).multipliedBy(3).mas_offset(0);
+        make.height.mas_equalTo(self.scrollView).multipliedBy(1).mas_offset(0);
     }];
     
     
@@ -71,17 +80,18 @@
     self.scrollView.showsVerticalScrollIndicator = NO;
 }
 
-
-- (void)addPageControl{
-    self.pageControl = [[UIPageControl alloc]initWithFrame:CGRectZero];
-    //在不设置pageControl的width时，其会通过之后的numberOfPages自动设置合适的宽。所以有此技巧的话，我们可以省去计算它的宽
-    
-    [self.pageControl setCurrentPageIndicatorTintColor:[UIColor redColor]];
-    [self.pageControl setPageIndicatorTintColor:[UIColor blackColor]];
-    //self.pageControl.numberOfPages = 3;
-    self.pageControl.currentPage = 0;
-    [self.pageControl addTarget:self action:@selector(turnPage) forControlEvents:UIControlEventValueChanged];
-    [self addSubview:self.pageControl];
+- (void)showPageControl {
+    if (self.pageControl == nil) {
+        self.pageControl = [[UIPageControl alloc]initWithFrame:CGRectZero];
+        //在不设置pageControl的width时，其会通过之后的numberOfPages自动设置合适的宽。所以有此技巧的话，我们可以省去计算它的宽
+        
+        [self.pageControl setCurrentPageIndicatorTintColor:[UIColor redColor]];
+        [self.pageControl setPageIndicatorTintColor:[UIColor blackColor]];
+        //self.pageControl.numberOfPages = 3;
+        self.pageControl.currentPage = 0;
+        [self.pageControl addTarget:self action:@selector(turnPage) forControlEvents:UIControlEventValueChanged];
+        [self addSubview:self.pageControl];
+    }
 }
 
 
@@ -92,7 +102,7 @@
 
 
 #pragma mark - 注意:当使用xib的时候，如果再在xib上的scrollView上添加新xib控件，如Label，则会导致ScrollView无法移动，解决方法：将原本的ContentSize设置从viewDidLoad方法中调到viewDidAppear方法中。
-- (void)setViewWithImages:(NSArray *)m_images direction:(NSInteger)direction{
+- (void)setViewWithImages:(NSArray *)m_images direction:(ADViewDirection)direction {
     if (m_images.count == 1) {
         [self.scrollView setScrollEnabled:NO];
         [self.pageControl setAlpha:0];
@@ -100,32 +110,21 @@
         [self.scrollView setScrollEnabled:YES];
         [self.pageControl setAlpha:1];
     }
-    adImageNameArray = m_images;
-    self.m_direction = direction;
+    self.adImageNameArray = m_images;
+    self.direction = direction;
     
 #pragma mark 在头添加最后一页，在尾添加第一页，以用来循环  原理：4-[1-2-3-4]-1
     NSMutableArray *images = [[NSMutableArray alloc]init];
-    [images addObject:adImageNameArray[adImageNameArray.count-1]];
-    [images addObjectsFromArray:adImageNameArray];
-    [images addObject:adImageNameArray[0]];
+    [images addObject:self.adImageNameArray[self.adImageNameArray.count-1]];
+    [images addObjectsFromArray:self.adImageNameArray];
+    [images addObject:self.adImageNameArray[0]];
     
-    
-    self.pageControl.numberOfPages = adImageNameArray.count;
-    
-    
-    CGSize svContentSize = CGSizeZero;
     CGPoint svContentOffset = CGPointZero;
     CGRect svRectToVisible = CGRectZero;
-    
-    CGPoint pageControlCenter = CGPointZero;
-    
     switch (direction) {
-        case eAdViewDirectionDown:  //pageController下方显示(默认)
-        {
-            svContentSize = CGSizeMake(self.frame.size.width * images.count, self.frame.size.height);
+        case ADViewDirectionHorizontal: {
             svContentOffset = CGPointMake(0, 0);
             svRectToVisible = CGRectMake(self.frame.size.width * 1, 0, self.frame.size.width, self.frame.size.height);//初始时显示第一页，由第一页在4-[1-2-3-4]-1中的第二张，所以x值设为width
-            pageControlCenter = CGPointMake(self.frame.size.width/2, self.frame.size.height - 20);
             
             for (int i = 0; i < images.count; i++) {
                 UIImageView *imageV = [[UIImageView alloc] initWithFrame:CGRectZero];
@@ -135,35 +134,54 @@
             
             break;
         }
-            
-        case eAdViewDirectionRight:{    //竖直显示
-            svContentSize = CGSizeMake(self.frame.size.width, self.frame.size.height * images.count);
+        case ADViewDirectionVertical: {
             svContentOffset = CGPointMake(0, 0);
             svRectToVisible = CGRectMake(0, self.frame.size.height, self.frame.size.width, self.frame.size.height * 1);
-            pageControlCenter = CGPointMake(self.frame.size.width - 10, self.frame.size.height/2);
             
             for (int i = 0; i < images.count; i++) {
                 UIImageView *imageV = [[UIImageView alloc]initWithFrame:CGRectZero];
                 imageV.tag = i;
                 [self addImageView:imageV withImagePath:images[i]];
             }
-            
-            self.pageControl.transform = CGAffineTransformRotate(self.pageControl.transform, M_PI/2);//竖直
             break;
         }
         default:
             break;
     }
     
-    [self.scrollView mas_updateConstraints:^(MASConstraintMaker *make) {
-        make.width.mas_equalTo(self.scrollView.mas_width).multipliedBy(images.count).mas_offset(1);
-        make.height.mas_equalTo(self.scrollView.mas_height).multipliedBy(1).mas_offset(0);
+    
+    [self.containerView mas_remakeConstraints:^(MASConstraintMaker *make) {
+        make.left.right.mas_equalTo(self.scrollView);
+        make.top.bottom.mas_equalTo(self.scrollView);
+        make.width.mas_equalTo(self.scrollView).multipliedBy(images.count).mas_offset(0);
+        make.height.mas_equalTo(self.scrollView).multipliedBy(1).mas_offset(0);
     }];
+    [self setNeedsLayout];
+    [self layoutIfNeeded];
     
     [self.scrollView setContentOffset:svContentOffset];
     [self.scrollView scrollRectToVisible:svRectToVisible animated:NO];
-    [self.pageControl setCenter:pageControlCenter];
-
+    
+    
+    if (self.pageControl) {
+        self.pageControl.numberOfPages = self.adImageNameArray.count;
+        
+        CGPoint pageControlCenter = CGPointZero;
+        switch (direction) {
+            case ADViewDirectionHorizontal: {  //水平滚动，pageControl在下方水平显示(默认)
+                pageControlCenter = CGPointMake(self.frame.size.width/2, self.frame.size.height - 20);
+                break;
+            }
+            case ADViewDirectionVertical: {    //竖直滚动，pageControl要立
+                pageControlCenter = CGPointMake(self.frame.size.width - 10, self.frame.size.height/2);
+                self.pageControl.transform = CGAffineTransformRotate(self.pageControl.transform, M_PI/2);
+                break;
+            }
+            default:
+                break;
+        }
+        [self.pageControl setCenter:pageControlCenter];
+    }
 }
 
 
@@ -172,8 +190,12 @@
 - (void)addImageView:(UIImageView *)imageV withImagePath:(NSString *)imagePath{ //or imageUrl
     [imageV addTapGestureWithTarget:self mSEL:@selector(imageViewClick:)];
     [self.scrollView addSubview:imageV];
-    [imageV mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.edges.mas_equalTo(self.scrollView).mas_equalTo(0);
+    
+    NSInteger imageIndex = imageV.tag;
+    [imageV mas_remakeConstraints:^(MASConstraintMaker *make) {
+        make.top.bottom.mas_equalTo(self.containerView).mas_equalTo(0);
+        make.width.mas_equalTo(self.scrollView);
+        make.left.mas_equalTo(self.containerView).mas_offset(imageIndex * 320);
     }];
     
     if (self.delegate && [self.delegate respondsToSelector:@selector(commonAdView_setImageView:withImagePath:)]) {
@@ -194,18 +216,18 @@
 #pragma mark - ScrollDelegate
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
-    switch (self.m_direction) {
-        case eAdViewDirectionDown:{
+    switch (self.direction) {
+        case ADViewDirectionHorizontal:{
             CGFloat svWidth = self.frame.size.width;
-            int page = floor( (scrollView.contentOffset.x - svWidth/(adImageNameArray.count+2)) /svWidth) + 1;
+            int page = floor( (scrollView.contentOffset.x - svWidth/(self.adImageNameArray.count+2)) /svWidth) + 1;
             page --;  //由于默认从第二张开始。所以如果算出来如果是第二张，其实是第一页，所以要减去一页
             self.pageControl.currentPage = page;
             
             break;
         }
-        case eAdViewDirectionRight:{
+        case ADViewDirectionVertical:{
             CGFloat svHeight = self.frame.size.height;
-            int page = floor( (scrollView.contentOffset.y - svHeight/(adImageNameArray.count+2)) /svHeight) + 1;
+            int page = floor( (scrollView.contentOffset.y - svHeight/(self.adImageNameArray.count+2)) /svHeight) + 1;
             page --;  //由于默认从第二张开始。所以如果算出来如果是第二张，其实是第一页，所以要减去一页
             self.pageControl.currentPage = page;
             
@@ -218,30 +240,30 @@
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
 {
-    switch (self.m_direction) {
-        case eAdViewDirectionDown:{
+    switch (self.direction) {
+        case ADViewDirectionHorizontal:{
             CGFloat svWidth = self.frame.size.width;
             CGFloat svHeight = self.frame.size.height;
             
-            int currentPage = floor( (scrollView.contentOffset.x - svWidth/(adImageNameArray.count+2)) /svWidth) + 1;
+            int currentPage = floor( (scrollView.contentOffset.x - svWidth/(self.adImageNameArray.count+2)) /svWidth) + 1;
             //int currentPage_ = (int)self.scrollView.contentOffset.x/pagewidth; // 和上面效果一样
             //NSLog(@"currentPage_==%d",currentPage_);
-            if (currentPage==0){    // 序号0其实是4-[1-2-3-4]-1中的4
-                [scrollView scrollRectToVisible:CGRectMake(svWidth * adImageNameArray.count, 0, svWidth, svHeight) animated:NO];
-            }else if (currentPage==(adImageNameArray.count+1)){// 序号5其实是4-[1-2-3-4]-1中的第1，循环到第一页
+            if (currentPage == 0){    // 序号0其实是4-[1-2-3-4]-1中的4
+                [scrollView scrollRectToVisible:CGRectMake(svWidth * self.adImageNameArray.count, 0, svWidth, svHeight) animated:NO];
+            }else if (currentPage == (self.adImageNameArray.count+1)){// 序号5其实是4-[1-2-3-4]-1中的第1，循环到第一页
                 [scrollView scrollRectToVisible:CGRectMake(svWidth, 0, svWidth, svHeight) animated:NO];
             }
             
             break;
         }
-        case eAdViewDirectionRight:{
+        case ADViewDirectionVertical:{
             CGFloat svWidth = self.frame.size.width;
             CGFloat svHeight = self.frame.size.height;
             
-            int currentPage = floor( (scrollView.contentOffset.y - svHeight/(adImageNameArray.count+2)) /svHeight) + 1;
+            int currentPage = floor( (scrollView.contentOffset.y - svHeight/(self.adImageNameArray.count+2)) /svHeight) + 1;
             if (currentPage==0){
-                [scrollView scrollRectToVisible:CGRectMake(0, svHeight * adImageNameArray.count, svWidth, svHeight) animated:NO];
-            }else if (currentPage==(adImageNameArray.count+1)){
+                [scrollView scrollRectToVisible:CGRectMake(0, svHeight * self.adImageNameArray.count, svWidth, svHeight) animated:NO];
+            }else if (currentPage==(self.adImageNameArray.count+1)){
                 [scrollView scrollRectToVisible:CGRectMake(0, svHeight, svWidth, svHeight) animated:NO];
             }
             
@@ -259,13 +281,13 @@
     
     NSInteger page = self.pageControl.currentPage;
     
-    switch (self.m_direction) {
-        case eAdViewDirectionDown:{
+    switch (self.direction) {
+        case ADViewDirectionHorizontal:{
             [self.scrollView scrollRectToVisible:CGRectMake(svWidth * (page+1),0,svWidth,svHeight) animated:NO];
             
             break;
         }
-        case eAdViewDirectionRight:{
+        case ADViewDirectionVertical:{
             [self.scrollView scrollRectToVisible:CGRectMake(0,svHeight * (page+1),svWidth,svHeight) animated:NO];
             
             break;
@@ -281,7 +303,7 @@
 - (void)runTimePage{
     NSInteger page = self.pageControl.currentPage;
     page++;
-    page = page == adImageNameArray.count ? 0 : page ;
+    page = page == self.adImageNameArray.count ? 0 : page ;
     self.pageControl.currentPage = page;
     [self turnPage];
 }
